@@ -1,0 +1,145 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    container_name: postgres
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - wxpe-network
+    deploy:
+      resources:
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+        limits:
+          cpus: "0.50"
+          memory: 1G
+  websocket-server:
+    image: yijun9124/wxpe-websocket-server:${TAG:-latest}
+    container_name: websocket-server
+    hostname: websocket-server
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-8080}:${WS_PORT:-8080}"
+    env_file:
+      - .env
+    user: "${UID}:${GID}"
+    volumes:
+      - ./logs:/app/logs:rw
+    # depends_on:
+    #   - backend-service
+    networks:
+      - wxpe-network
+    deploy:
+      resources:
+        reservations:
+          cpus: "0.15"
+          memory: 128M
+        limits:
+          cpus: "0.30"
+          memory: 512M
+  udp-server:
+    image: yijun9124/wxpe-udp-server:${TAG:-latest}
+    container_name: udp-server
+    hostname: udp-server
+    restart: unless-stopped
+    ports:
+      - "2000:2000/udp"
+    env_file:
+      - .env
+    user: "${UID}:${GID}"
+    volumes:
+      - ./data:/usr/src/app/data:rw
+      - ./logs:/usr/src/app/logs:rw
+    # depends_on:
+    #   - backend-service
+    networks:
+      - wxpe-network
+    deploy:
+      resources:
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+        limits:
+          cpus: "0.25"
+          memory: 256M
+  backend-service:
+    image: yijun9124/wxpe-service:${TAG:-latest}
+    container_name: backend-service
+    hostname: backend-service
+    user: "${UID}:${GID}"
+    group_add:
+      - dialout
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data:rw
+      - ./logs:/app/logs:rw
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+    privileged: true
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://backend-service:3000/api/parameters",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - wxpe-network
+    deploy:
+      resources:
+        reservations:
+          cpus: "0.50"
+          memory: 1G
+        limits:
+          cpus: "1.00"
+          memory: 3G
+  frontend:
+    image: yijun9124/wxpe-frontend:${TAG:-latest}
+    container_name: frontend
+    hostname: frontend
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    env_file:
+      - .env
+    user: "${UID}:${GID}"
+    # depends_on:
+    #   - backend-service
+    networks:
+      - wxpe-network
+    deploy:
+      resources:
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+networks:
+  wxpe-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
