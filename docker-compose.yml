@@ -57,8 +57,11 @@ services:
     volumes:
       - ./data:/usr/src/app/data:rw
       - ./logs:/usr/src/app/logs:rw
-    # depends_on:
-    #   - backend-service
+    depends_on:
+      backend-service:
+        condition: service_healthy
+      websocket-server:
+        condition: service_started
     networks:
       - wxpe-network
     deploy:
@@ -88,7 +91,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
+      websocket-server:
+        condition: service_started
     healthcheck:
       test:
         [
@@ -122,9 +128,9 @@ services:
       - "3002:3000"
     env_file:
       - .env
-    user: "${UID}:${GID}"
-    # depends_on:
-    #   - backend-service
+    depends_on:
+      backend-service:
+        condition: service_healthy
     networks:
       - wxpe-network
     deploy:
