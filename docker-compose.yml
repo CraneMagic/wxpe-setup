@@ -21,7 +21,7 @@ services:
           cpus: "0.50"
           memory: 1G
   websocket-server:
-    image: yijun9124/wxpe-websocket-server:${TAG:-latest}
+    image: registry.yijunstudio.xyz/yijun9124/wxpe-websocket-server:${TAG:-latest}
     container_name: websocket-server
     hostname: websocket-server
     restart: unless-stopped
@@ -45,7 +45,7 @@ services:
           cpus: "0.30"
           memory: 512M
   udp-server:
-    image: yijun9124/wxpe-udp-server:${TAG:-latest}
+    image: registry.yijunstudio.xyz/yijun9124/wxpe-udp-server:${TAG:-latest}
     container_name: udp-server
     hostname: udp-server
     restart: unless-stopped
@@ -73,7 +73,7 @@ services:
           cpus: "0.25"
           memory: 256M
   backend-service:
-    image: yijun9124/wxpe-service:${TAG:-latest}
+    image: registry.yijunstudio.xyz/yijun9124/wxpe-service:${TAG:-latest}
     container_name: backend-service
     hostname: backend-service
     user: "${UID}:${GID}"
@@ -120,7 +120,7 @@ services:
           cpus: "1.00"
           memory: 3G
   frontend:
-    image: yijun9124/wxpe-frontend:${TAG:-latest}
+    image: registry.yijunstudio.xyz/yijun9124/wxpe-frontend:${TAG:-latest}
     container_name: frontend
     hostname: frontend
     restart: unless-stopped
